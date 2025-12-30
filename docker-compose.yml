@@ -1,0 +1,10 @@
+services:
+  filevault-azure:
+    build: .
+    image: filevault-azure
+    container_name: filevault-azure
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./src/azure-sa/.env
+    restart: unless-stopped
