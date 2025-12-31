@@ -70,14 +70,13 @@ jobs:
           secrets: ACR-NAME,ACR-USERNAME,ACR-PASSWORD
 
       - name: Set environment variables for deployment
-        run: echo "Environment variables set"
-        env:
-          ACR_NAME: ${{ steps.get-acr.outputs.ACR-NAME }}
-          ACR_USERNAME: ${{ steps.get-acr.outputs.ACR-USERNAME }}
-          ACR_PASSWORD: ${{ steps.get-acr.outputs.ACR-PASSWORD }}
+        run: |
+          echo "ACR_NAME=${{ steps.get-acr.outputs.ACR-NAME }}" >> $GITHUB_ENV
+          echo "ACR_USERNAME=${{ steps.get-acr.outputs.ACR-USERNAME }}" >> $GITHUB_ENV
+          echo "ACR_PASSWORD=${{ steps.get-acr.outputs.ACR-PASSWORD }}" >> $GITHUB_ENV
 
       - name: Docker Login
-        run: echo "${{ env.ACR_PASSWORD }}" | docker login ${{ env.ACR_NAME }}.azurecr.io --username ${{ env.ACR_USERNAME }} --password-stdin
+        run: echo "$ACR_PASSWORD" | docker login $ACR_NAME.azurecr.io --username $ACR_USERNAME --password-stdin
 
       - name: Build Docker Image
         run: docker build -t $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA} .
