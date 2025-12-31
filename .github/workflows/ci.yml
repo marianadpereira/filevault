@@ -77,7 +77,7 @@ jobs:
           ACR_PASSWORD: ${{ steps.get-acr.outputs.ACR-PASSWORD }}
 
       - name: Docker Login
-        run: echo "$ACR_PASSWORD" | docker login $ACR_NAME.azurecr.io --username $ACR_USERNAME --password-stdin
+        run: docker login $ACR_NAME.azurecr.io --username $ACR_USERNAME --password-stdin <<< "$ACR_PASSWORD"
 
       - name: Build Docker Image
         run: docker build -t $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA} .
