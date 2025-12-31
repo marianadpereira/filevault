@@ -10,3 +10,8 @@ variable "acr_name" {
   description = "ACR name"
   default     = "filevaultregistrymariana"
 }
+
+variable "kv_name" {
+  description = "Key Vault name"
+  default     = "filevault-kv-mariana"
+}

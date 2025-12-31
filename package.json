@@ -2,6 +2,15 @@
   "scripts": {
     "test": "nyc mocha 'src/test/**/*.test.js'"
   },
+
+  "nyc": {
+    "extension": [".js"],
+    "include": ["src/azure-sa/**/*.js"],
+    "exclude": ["src/test/**/*.js"],
+    "reporter": ["text", "lcov"],
+    "all": true
+  },
+
   "dependencies": {
     "@azure/storage-blob": "^12.29.1",
     "dotenv": "^17.2.3",
