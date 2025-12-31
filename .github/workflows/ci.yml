@@ -48,3 +48,45 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         env:
           SONAR_TOKEN: ${{ env.SONAR-TOKEN }}
+
+  cd:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get ACR credentials from Key Vault
+        id: get-acr
+        uses: azure/get-keyvault-secrets@v1
+        with:
+          keyvault: filevault-kv-mariana
+          secrets: ACR-NAME,ACR-USERNAME,ACR-PASSWORD
+
+      - name: Set environment variables for deployment
+        run: echo "Environment variables set"
+        env:
+          ACR_NAME: ${{ steps.get-acr.outputs.ACR-NAME }}
+          ACR_USERNAME: ${{ steps.get-acr.outputs.ACR-USERNAME }}
+          ACR_PASSWORD: ${{ steps.get-acr.outputs.ACR-PASSWORD }}
+
+      - name: Docker Login
+        run: echo "$ACR_PASSWORD" | docker login $ACR_NAME.azurecr.io --username $ACR_USERNAME --password-stdin
+
+      - name: Build Docker Image
+        run: docker build -t $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA} .
+
+      - name: Push Docker Image to ACR
+        run: docker push $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA}
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: filevault-app
+          images: $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA}
