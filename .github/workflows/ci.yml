@@ -22,3 +22,6 @@ jobs:
 
       - name: Run ESLint
         run: npx eslint src/azure-sa
+
+      - name: Run tests
+        run: npm test
