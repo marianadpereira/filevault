@@ -88,4 +88,4 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: filevault-app
-          images: $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA}
+          images: ${{ env.ACR_NAME }}.azurecr.io/filevault:${{ github.sha }}
