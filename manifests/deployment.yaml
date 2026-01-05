@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: filevault-deployment
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: filevault
@@ -17,3 +17,23 @@ spec:
           image: filevaultregistrymariana.azurecr.io/filevault:placeholder
           ports:
             - containerPort: 3000
+          env:
+            - name: AZURE_STORAGE_ACCOUNT_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: filevault-config
+                  key: STORAGE_NAME
+            - name: AZURE_STORAGE_ACCOUNT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: filevault-config
+                  key: STORAGE_KEY
+            - name: AZURE_CONTAINER_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: filevault-config
+                  key: CONTAINER_NAME
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
