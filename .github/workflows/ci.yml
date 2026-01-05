@@ -62,8 +62,8 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Get ACR credentials from Key Vault
-        id: get-acr
+      - name: Get Secrets from Key Vault
+        id: get-secrets
         uses: azure/get-keyvault-secrets@v1
         with:
           keyvault: filevault-kv-mariana
@@ -71,21 +71,30 @@ jobs:
 
       - name: Set environment variables for deployment
         run: |
-          echo "ACR_NAME=${{ steps.get-acr.outputs.ACR-NAME }}" >> $GITHUB_ENV
-          echo "ACR_USERNAME=${{ steps.get-acr.outputs.ACR-USERNAME }}" >> $GITHUB_ENV
-          echo "ACR_PASSWORD=${{ steps.get-acr.outputs.ACR-PASSWORD }}" >> $GITHUB_ENV
+          echo "ACR_NAME=${{ steps.get-secrets.outputs.ACR-NAME }}" >> $GITHUB_ENV
+          echo "ACR_USERNAME=${{ steps.get-secrets.outputs.ACR-USERNAME }}" >> $GITHUB_ENV
+          echo "ACR_PASSWORD=${{ steps.get-secrets.outputs.ACR-PASSWORD }}" >> $GITHUB_ENV
 
       - name: Docker Login
         run: echo "$ACR_PASSWORD" | docker login $ACR_NAME.azurecr.io --username $ACR_USERNAME --password-stdin
 
-      - name: Build Docker Image
-        run: docker build -t $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA} .
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA} .
+          docker push $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA}
 
-      - name: Push Docker Image to ACR
-        run: docker push $ACR_NAME.azurecr.io/filevault:${GITHUB_SHA}
-
-      - name: Deploy to Azure App Service
-        uses: azure/webapps-deploy@v2
+      - name: Set AKS Context
+        uses: azure/aks-set-context@v3
         with:
-          app-name: filevault-app
-          images: ${{ env.ACR_NAME }}.azurecr.io/filevault:${{ github.sha }}
+          resource-group: FileVault
+          cluster-name: filevault-aks-cluster
+
+      - name: Deploy to AKS
+        uses: azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: |
+            manifests/deployment.yaml
+            manifests/service.yaml
+          images: |
+            ${{ env.ACR_NAME }}.azurecr.io/filevault:${{ github.sha }}

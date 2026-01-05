@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filevault-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: filevault
+  template:
+    metadata:
+      labels:
+        app: filevault
+    spec:
+      containers:
+        - name: filevault-app
+          image: filevault:latest
+          ports:
+            - containerPort: 3000
