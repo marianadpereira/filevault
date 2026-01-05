@@ -98,3 +98,16 @@ jobs:
             manifests/service.yaml
           images: |
             ${{ env.ACR_NAME }}.azurecr.io/filevault:${{ github.sha }}
+
+      - name: Print Test URL
+        run: |
+          echo "Waiting for External IP..."
+          # Loop until the External IP is no longer <pending>
+          IP=""
+          while [ -z "$IP" ]; do
+            IP=$(kubectl get service filevault-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+            [ -z "$IP" ] && sleep 10
+          done
+          echo "---------------------------------------------------"
+          echo "Test URL: http://$IP"
+          echo "---------------------------------------------------"
